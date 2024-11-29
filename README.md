@@ -25,6 +25,7 @@ ENGINE=InnoDB
 AUTO_INCREMENT=94
 ;
 ```
-## Documentation for RSG mentained by Quantum 
+### Credits
 
-[RSG DOCS](https://quantumprojects.mintlify.app/introduction)
+RexShack for [RSG-Inventory](https://github.com/Rexshack-RedM/rsg-inventory ) 
+
