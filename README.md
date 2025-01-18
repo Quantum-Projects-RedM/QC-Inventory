@@ -3,7 +3,7 @@ A complete inventory system for RedM, implementing items, weapons, shops, and mo
 
 ### [Quantums Discord](https://discord.gg/kJ8ZrGM8TS)
 
-### _Updated to Nov 2024 OX Build. With that said this is not perfect but can be used in servers, just beware there is some inperfections :)_
+### _Updated to Nov 2024 OX Build. With that said this is not perfect but can be used in servers, just beware there is some inperfections _
 
 ## ✨ Features
 
