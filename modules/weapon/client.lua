@@ -15,180 +15,60 @@ local function vehicleIsCycle(vehicle)
 	return class == 8 or class == 13
 end
 
-function Weapon.Equip(item, data, noWeaponAnim)
+function Weapon.Equip(item, data)
 	local playerPed = cache.ped
 	local coords = GetEntityCoords(playerPed, true)
-    local sleep
-
-	if client.weaponanims then
-		if noWeaponAnim or (cache.vehicle and vehicleIsCycle(cache.vehicle)) then
-			goto skipAnim
-		end
-
-		local anim = data.anim or anims[GetWeapontypeGroup(data.hash)]
-
-		if anim == anims[`GROUP_PISTOL`] and not client.hasGroup(shared.police) then
-			anim = nil
-		end
-
-		sleep = anim and anim[3] or 1200
-
-		Utils.PlayAnimAdvanced(sleep, anim and anim[1] or 'reaction@intimidation@1h', anim and anim[2] or 'intro', coords.x, coords.y, coords.z, 0, 0, GetEntityHeading(playerPed), 8.0, 3.0, sleep*2, 50, 0.1)
-	end
-
-	::skipAnim::
 
 	item.hash = data.hash
 	item.ammo = data.ammoname
-	if IS_RDR3 then
-		item.melee = IsWeaponMeleeWeapon(data.hash)
-	end
+	item.melee = 0
 	item.timer = 0
 	item.throwable = data.throwable
-	item.group = GetWeapontypeGroup(item.hash)
-	if IS_RDR3 then
-
-		if not HasPedGotWeapon(playerPed, data.hash, 0, false) then
-
-			local currentWeaponAmmo = GetAmmoInPedWeapon(playerPed, data.hash)
-
-			-- RemoveAmmoFromPed
-			N_0xf4823c813cb8277d(playerPed, data.hash, currentWeaponAmmo, `REMOVE_REASON_DEBUG`)
-
-			--[[ GiveWeaponToPed ]]
-			if data.throwable then
-				Citizen.InvokeNative(0xB282DC6EBD803C75, playerPed, data.hash, tonumber(item.count), true, 0) -- GIVE_DELAYED_WEAPON_TO_PED
-			else	
-				Citizen.InvokeNative(0xB282DC6EBD803C75, playerPed, data.hash, item.metadata.ammo, true, 0) -- GIVE_DELAYED_WEAPON_TO_PED
-			end
-		end
-	end
-
-	if item.metadata.tint then SetPedWeaponTintIndex(playerPed, data.hash, item.metadata.tint) end
-
-	if item.metadata.components then
-		for i = 1, #item.metadata.components do
-			local components = Items[item.metadata.components[i]].client.component
-			for v=1, #components do
-				local component = components[v]
-				if DoesWeaponTakeWeaponComponent(data.hash, component) then
-					if not HasPedGotWeaponComponent(playerPed, data.hash, component) then
-						GiveWeaponComponentToPed(playerPed, data.hash, component)
-					end
-				end
-			end
-		end
-	end
-
-	if item.metadata.specialAmmo then
-		local clipComponentKey = ('%s_CLIP'):format(data.model:gsub('WEAPON_', 'COMPONENT_'))
-		local specialClip = ('%s_%s'):format(clipComponentKey, item.metadata.specialAmmo:upper())
-
-		if DoesWeaponTakeWeaponComponent(data.hash, specialClip) then
-			GiveWeaponComponentToPed(playerPed, data.hash, specialClip)
-		end
-	end
+	item.group = Citizen.InvokeNative(0xEDCA14CA5199FF25, item.hash)
 
 	local ammo = item.metadata.ammo or item.throwable and 1 or 0
+	-- Create an object instead of adding the weapon directly to ped
+	-- Allows the components and ammo to be set more smoothly
+	SetPedAmmo(playerPed, data.hash, 0)
+	GiveWeaponToPed_2(playerPed, data.hash, 0, true, false, 0, false, 0.5, 1.0, 0, false, 0.0, false)
 
-	if IS_RDR3 then
-		SetCurrentPedWeapon(playerPed, data.hash, false, 0, false, false)
+	-- Sometimes the ammo fills or splits into reserves instead of loading into the weapon
+	-- Refilling without a timeout tends to lead to the weapon jamming
+	--SetTimeout(0, function() RefillAmmoInstantly(playerPed) end)
 
-		Citizen.InvokeNative(0x2A7B50E, true) -- SetWeaponsNoAutoswap
-	end
+	--[[SetPedAmmo(playerPed, data.hash, ammo)
+	SetAmmoInClip(playerPed, data.hash, 0)]]
 
-	SetPedAmmo(playerPed, data.hash, ammo)
+	-- Makes the player reload every time in RDR3, we can get around this, but it enables a quick reload
+	local maxClip = GetMaxAmmoInClip(playerPed, data.hash, true)
 
-	if item.group == `GROUP_PETROLCAN` or item.group == `GROUP_FIREEXTINGUISHER` then
-		item.metadata.ammo = item.metadata.durability
-		SetPedInfiniteAmmo(playerPed, true, data.hash)
-	end
+	Citizen.InvokeNative(0x5E3BDDBCB83F3D84, PlayerPedId(), data.hash, 1, 1, 1, 0, false, 0.5, 1.0, 752097756, 0, true, 0.0)
+	Citizen.InvokeNative(0xADF692B254977C0C, PlayerPedId(), data.hash, 0, 0, 0, 0)
+
+	SetPedAmmo(playerPed, data.hash, ammo - maxClip)
+	SetAmmoInClip(playerPed, data.hash, maxClip)
 
 	TriggerEvent('ox_inventory:currentWeapon', item)
-
-	if client.weaponnotify then
-		Utils.ItemNotify({ item, 'ui_equipped' })
-	end
-
-	return item, sleep
+	Utils.ItemNotify({ item, 'ui_equipped' })
+	return item
 end
 
-function Weapon.Disarm(currentWeapon, noAnim, keepHolstered)
+
+function Weapon.Disarm(currentWeapon, noAnim)
 	if currentWeapon?.timer then
 		currentWeapon.timer = nil
-
-        TriggerServerEvent('ox_inventory:updateWeapon')
 		SetPedAmmo(cache.ped, currentWeapon.hash, 0)
-
-		if client.weaponanims and not noAnim then
-			if cache.vehicle and vehicleIsCycle(cache.vehicle) then
-				goto skipAnim
-			end
-
-			ClearPedSecondaryTask(cache.ped)
-
-			local item = Items[currentWeapon.name]
-			local coords = GetEntityCoords(cache.ped, true)
-			local anim = item.anim or anims[GetWeapontypeGroup(currentWeapon.hash)]
-
-			if anim == anims[`GROUP_PISTOL`] and not client.hasGroup(shared.police) then
-				anim = nil
-			end
-
-			local sleep = anim and anim[6] or 1400
-			
-			Utils.PlayAnimAdvanced(sleep, anim and anim[4] or 'reaction@intimidation@1h', anim and anim[5] or 'outro', coords.x, coords.y, coords.z, 0, 0, GetEntityHeading(cache.ped), 8.0, 3.0, sleep, 50, 0)
-		end
-
-		::skipAnim::
-
-		if client.weaponnotify then
-			Utils.ItemNotify({ currentWeapon, 'ui_holstered' })
-		end
-
-		TriggerEvent('ox_inventory:currentWeapon')
+		GiveDelayedWeaponToPed(PlayerPedId(), currentWeapon.hash, 0, true, 0)
+		Utils.ItemNotify({ currentWeapon, 'ui_holstered' })
 	end
-
-	if IS_RDR3 and currentWeapon then
-		if not keepHolstered then
-			local ammoHash = GetPedAmmoTypeFromWeapon(cache.ped, currentWeapon.hash)
-			Citizen.InvokeNative(0xB6CFEC32E3742779, cache.ped, ammoHash, currentWeapon.ammo, GetHashKey('REMOVE_REASON_DROPPED'))  --_REMOVE_AMMO_FROM_PED_BY_TYPE
-	
-			RemoveWeaponFromPed(cache.ped, currentWeapon.hash)
-		end
-
-		--[[ GetPedCurrentHeldWeapon]]
-		local heldWeapon = N_0x8425c5f057012dab(cache.ped)
-
-		--[[ Only use Swap if the weapon currently carried by the ped is the same one we are trying to disarm. ]]
-		if heldWeapon == currentWeapon.hash then
-			--[[ HolsterPedWeapons ]]
-			N_0x94a3c1b804d291ec(cache.ped, false, false, true, false)
-
-			TaskSwapWeapon(cache.ped, 0, 0, 0, 0)
-		end
-	end
+	Utils.WeaponWheel()
+	-- RemoveAllPedWeapons(cache.ped, true, true)
+	Citizen.InvokeNative(0x94A3C1B804D291EC, cache.ped)
+	Citizen.InvokeNative(0xFCCC886EDE3C63EC, cache.ped, 2, false)
 end
 
 function Weapon.ClearAll(currentWeapon)
 	Weapon.Disarm(currentWeapon)
-
-	if IS_RDR3 then
-		RemoveAllPedWeapons(PlayerPedId(), true, IS_RDR3)
-	end
-
-	if client.parachute then
-		local chute = `GADGET_PARACHUTE`
-		GiveWeaponToPed(cache.ped, chute, 0, true, false)
-		SetPedGadget(cache.ped, chute, true)
-	end
-end
-
-if IS_RDR3 then
-	function GetSelectedPedWeapon(playerPed)
-		local _, wep = GetCurrentPedWeapon(playerPed, true, 0, true)
-		return wep
-	end
 end
 
 Utils.Disarm = Weapon.Disarm
