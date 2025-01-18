@@ -3,6 +3,8 @@ A complete inventory system for RedM, implementing items, weapons, shops, and mo
 
 ### [Quantums Discord](https://discord.gg/kJ8ZrGM8TS)
 
+### _Updated to Nov 2024 OX Build. With that said this is not perfect but can be used in servers, just beware there is some inperfections :)_
+
 ## ✨ Features
 
 - Server-side security ensures interactions with items, shops, and stashes are all validated.
@@ -27,7 +29,7 @@ A complete inventory system for RedM, implementing items, weapons, shops, and mo
 - Restricted access based on groups.
 - Registration of new stashes from any resource.
 - Containers allow access to small stashes when using an item, such as a paper bag.
-- Access gloveboxes and trunks for any horse or cart.
+- Access storage for any horse or cart.
 - Random item generation inside dumpsters and unowned vehicles.
 
 ## Installation
