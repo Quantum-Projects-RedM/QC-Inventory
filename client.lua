@@ -116,14 +116,14 @@ local Inventory = require 'modules.inventory.client'
 function client.openInventory(inv, data)
 	if invOpen then
 
-		if IS_RDR3 then
-			local entity = NetworkGetEntityFromNetworkId(data.netid)
-
-			if inv == "glovebox" then
-				if DoesEntityExist(entity) and not Citizen.InvokeNative(0xAAB0FE202E9FC9F0, entity, -1) then
-					return client.closeInventory()
-				end
+	if IS_RDR3 and type(data) == "table" then
+		    local entity = NetworkGetEntityFromNetworkId(data.netid)
+	
+		    if inv == "glovebox" then
+			if DoesEntityExist(entity) and not Citizen.InvokeNative(0xAAB0FE202E9FC9F0, entity, -1) then
+			    return client.closeInventory()
 			end
+		    end
 		end
 
 		if not inv and currentInventory.type == 'newdrop' then
