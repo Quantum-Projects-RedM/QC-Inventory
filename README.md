@@ -1,5 +1,6 @@
 # Quantum Projects Inventory/ Thanks to OX_Inventory
 - [Support](https://discord.gg/kJ8ZrGM8TS)
+
 A complete inventory system for RedM, implementing items, weapons, shops, and more for RSG Framework (can be made for others via bridge).
 
 ## ✨ Features
