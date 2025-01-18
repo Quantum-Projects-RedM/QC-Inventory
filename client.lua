@@ -1465,7 +1465,7 @@ RegisterNetEvent('ox_inventory:setPlayerInventory', function(currentDrops, inven
 
 		if EnableWeaponWheel then return end
 
-		local weaponHash = GetSelectedPedWeapon(playerPed)
+		local weaponHash = GetCurrentPedWeapon(playerPed)
 	
 		if currentWeapon then
 			if weaponHash ~= currentWeapon.hash and currentWeapon.timer then
@@ -1476,7 +1476,7 @@ RegisterNetEvent('ox_inventory:setPlayerInventory', function(currentDrops, inven
 					SetAmmoInClip(playerPed, currentWeapon.hash, currentWeapon.metadata.ammo)
 					SetPedCurrentWeaponVisible(playerPed, true, false, false, false)
 
-					weaponHash = GetSelectedPedWeapon(playerPed)
+					weaponHash = GetCurrentPedWeapon(playerPed)
 				end
 
 				if weaponHash ~= currentWeapon.hash then
