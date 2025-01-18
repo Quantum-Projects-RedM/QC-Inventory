@@ -116,15 +116,15 @@ local Inventory = require 'modules.inventory.client'
 function client.openInventory(inv, data)
 	if invOpen then
 
-	if IS_RDR3 and type(data) == "table" then
-		    local entity = NetworkGetEntityFromNetworkId(data.netid)
-	
-		    if inv == "glovebox" then
-			if DoesEntityExist(entity) and not Citizen.InvokeNative(0xAAB0FE202E9FC9F0, entity, -1) then
-			    return client.closeInventory()
-			end
-		    end
-		end
+		if IS_RDR3 and type(data) == "table" then
+            local entity = NetworkGetEntityFromNetworkId(data.netid)
+
+            if inv == "glovebox" then
+                if DoesEntityExist(entity) and not Citizen.InvokeNative(0xAAB0FE202E9FC9F0, entity, -1) then
+                    return client.closeInventory()
+                end
+            end
+        end
 
 		if not inv and currentInventory.type == 'newdrop' then
 			return client.closeInventory()
@@ -511,10 +511,10 @@ local function useSlot(slot, noAnim)
 
 			useItem(data, function(result)
 				if result then
-                    local sleep
-					currentWeapon, sleep = Weapon.Equip(item, data, noAnim or IS_RDR3)
-
-					if sleep then Wait(sleep) end
+                    if currentWeapon and currentWeapon.hash == data.hash then
+						currentWeapon = Weapon.Disarm(currentWeapon)
+						return
+					end
 				end
 			end, noAnim or IS_RDR3)
 
