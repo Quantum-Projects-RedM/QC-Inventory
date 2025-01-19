@@ -948,6 +948,8 @@ local function registerCommands()
 
 					:: skip_hotkey_processing ::
 					DisableControlAction(0,'INPUT_OPEN_WHEEL_MENU', true)   -- Disable Weapon Wheel, Works better without it for now :)
+					DisableControlAction(0,'INPUT_TOGGLE_HOLSTER', true)	-- Disable quick select by quick tapping TAB
+					DisableControlAction(0,'INPUT_TWIRL_PISTOL', true)	-- Disable fancy whirl trick holster on double tap TAB
 					if IsDisabledControlJustPressed(0, `INPUT_GAME_MENU_TAB_LEFT_SECONDARY`) then -- tab
 						if not client.weaponWheel and not IsPauseMenuActive() then
 
