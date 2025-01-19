@@ -947,9 +947,10 @@ local function registerCommands()
 					end
 
 					:: skip_hotkey_processing ::
-					
-					if IsDisabledControlJustPressed(0, `INPUT_OPEN_WHEEL_MENU`) then -- tab
+					DisableControlAction(0,'INPUT_OPEN_WHEEL_MENU', true)   -- Disable Weapon Wheel, Works better without it for now :)
+					if IsDisabledControlJustPressed(0, `INPUT_GAME_MENU_TAB_LEFT_SECONDARY`) then -- tab
 						if not client.weaponWheel and not IsPauseMenuActive() then
+
 							SendNUIMessage({ action = 'toggleHotbar' })
 						end
 					end
@@ -962,9 +963,9 @@ local function registerCommands()
 						playerReload()
 					end
 
-					if IsControlJustReleased(0,  `INPUT_AIM_IN_AIR`) then -- open inventory U
+--[[ 					if IsControlJustReleased(0,  `INPUT_AIM_IN_AIR`) then -- open inventory U
 						tryOpenSecondaryInventory()
-					end
+					end ]]
 				end
 			end
 		end)
