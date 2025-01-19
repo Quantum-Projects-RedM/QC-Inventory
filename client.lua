@@ -115,16 +115,16 @@ local Inventory = require 'modules.inventory.client'
 ---@return boolean?
 function client.openInventory(inv, data)
 	if invOpen then
-
+        
 		if IS_RDR3 and type(data) == "table" then
-            local entity = NetworkGetEntityFromNetworkId(data.netid)
+			local entity = NetworkGetEntityFromNetworkId(data.netid)
 
-            if inv == "glovebox" then
-                if DoesEntityExist(entity) and not Citizen.InvokeNative(0xAAB0FE202E9FC9F0, entity, -1) then
-                    return client.closeInventory()
-                end
-            end
-        end
+			if inv == "glovebox" then
+				if DoesEntityExist(entity) and not Citizen.InvokeNative(0xAAB0FE202E9FC9F0, entity, -1) then
+					return client.closeInventory()
+				end
+			end
+		end
 
 		if not inv and currentInventory.type == 'newdrop' then
 			return client.closeInventory()
@@ -511,10 +511,10 @@ local function useSlot(slot, noAnim)
 
 			useItem(data, function(result)
 				if result then
-                    if currentWeapon and currentWeapon.hash == data.hash then
-						currentWeapon = Weapon.Disarm(currentWeapon)
-						return
-					end
+                    local sleep
+					currentWeapon, sleep = Weapon.Equip(item, data, noAnim or IS_RDR3)
+
+					if sleep then Wait(sleep) end
 				end
 			end, noAnim or IS_RDR3)
 
@@ -1462,34 +1462,6 @@ RegisterNetEvent('ox_inventory:setPlayerInventory', function(currentDrops, inven
 			Utils.DeleteEntity(client.parachute)
 			client.parachute = false
 		end
-
-		if EnableWeaponWheel then return end
-
-		local weaponHash = GetCurrentPedWeapon(playerPed)
-	
-		if currentWeapon then
-			if weaponHash ~= currentWeapon.hash and currentWeapon.timer then
-				local weaponCount = Items[currentWeapon.name]?.count
-
-				if weaponCount > 0 then
-					SetCurrentPedWeapon(playerPed, currentWeapon.hash, true)
-					SetAmmoInClip(playerPed, currentWeapon.hash, currentWeapon.metadata.ammo)
-					SetPedCurrentWeaponVisible(playerPed, true, false, false, false)
-
-					weaponHash = GetCurrentPedWeapon(playerPed)
-				end
-
-				if weaponHash ~= currentWeapon.hash then
-					currentWeapon = Weapon.Disarm(currentWeapon, true)
-				end
-			end
-		elseif client.weaponmismatch and not client.ignoreweapons[weaponHash] then
-			local weaponType = GetWeapontypeGroup(weaponHash)
-
-			if weaponType ~= 0 and weaponType ~= `GROUP_UNARMED` then
-				Weapon.Disarm(currentWeapon, true)
-			end
-		end
 	end, 200)
 
 	local playerId = cache.playerId
@@ -1995,4 +1967,131 @@ lib.callback.register('ox_inventory:GetVehicleData', function(netid)
 	if entity then
 		return GetEntityModel(entity), GetVehicleClass(entity)
 	end
+end)
+
+
+
+Inhotbar = {}
+local unarmedHash = -1569615261
+
+Citizen.CreateThread(function()
+  local heldWeapon = nil
+  local heldWeaponInfo = nil
+  
+  while true do
+    Wait(500)
+
+    -- Make sure PlayerData.inventory is loaded
+    if not PlayerData or not PlayerData.inventory then 
+      goto continue 
+    end
+
+    -- Read the current weapon hash from the player
+    local currentWeapon = Citizen.InvokeNative(0x8425C5F057012DAB, PlayerPedId())
+    
+    -- Only do something if the weapon hash actually changed
+    if currentWeapon ~= heldWeapon then
+      -- If the new weapon is unarmed
+      if currentWeapon == unarmedHash then
+        -- If we *were* holding a weapon before, disarm it
+        if heldWeapon ~= nil then
+          Weapon.Disarm(heldWeaponInfo)
+        end
+        -- Clear out your stored weapon data
+        heldWeapon = nil
+        heldWeaponInfo = nil
+      
+      else
+        -- Otherwise, the new weapon is something valid, so find it in inventory
+        for k, v in pairs(PlayerData.inventory) do
+          if GetHashKey(v.name) == currentWeapon then
+            useSlot(v.slot) -- Or whatever your “equip” logic is
+            heldWeapon = currentWeapon
+            heldWeaponInfo = v
+            break
+          end
+        end
+      end
+    end
+    
+    ::continue::
+  end
+end)
+
+function table.removekey(table, key)
+    local element = table[key]
+    table[key] = nil
+    return element
+end
+
+Citizen.CreateThread(function()
+    while true do
+        Wait(1000)  -- run once per second
+
+        -- Make sure PlayerData and inventory are valid
+        if not PlayerData or not PlayerData.inventory then
+            goto continue
+        end
+        
+        ----------------------------------------------------------------
+        -- PASS 1: Remove items from Inhotbar that don't belong anymore
+        ----------------------------------------------------------------
+        for serial, hotbarItem in pairs(Inhotbar) do
+            -- 1) Check if the player even still has this item in their inventory
+            local count = Inventory.Search('count', hotbarItem.name)
+            if count == 0 then
+                -- The item doesn't exist anymore, remove from ped + hotbar
+                RemoveWeaponFromPed(PlayerPedId(), GetHashKey(hotbarItem.name))
+                table.removekey(Inhotbar, serial)
+            else
+                -- 2) Check if the item is now in a slot > 5 (i.e. not hotbar)
+                --    or maybe the item was moved around. Let's see if we find it 
+                --    in the inventory with a slot > 5.
+                local slotForThisSerial = nil
+                for k, invItem in pairs(PlayerData.inventory) do
+                    if invItem.metadata and invItem.metadata.serial == serial then
+                        slotForThisSerial = k
+                        break
+                    end
+                end
+                if not slotForThisSerial or slotForThisSerial > 5 then
+                    -- It's either not found at all in the inventory loop
+                    -- or found but in a slot > 5. Remove from ped + hotbar.
+                    RemoveWeaponFromPed(PlayerPedId(), GetHashKey(hotbarItem.name))
+                    table.removekey(Inhotbar, serial)
+                end
+            end
+        end
+        
+        ----------------------------------------------------------------
+        -- PASS 2: Add any item that belongs in hotbar but isn't there yet
+        ----------------------------------------------------------------
+        for k, invItem in pairs(PlayerData.inventory) do
+            if k <= 5 and invItem.metadata and invItem.metadata.serial then
+                local serial = invItem.metadata.serial
+                if not Inhotbar[serial] then
+                    -- We should give the ped this weapon
+                    Inhotbar[serial] = invItem
+                    
+                    -- Give the weapon with ammo
+                    Citizen.InvokeNative(0x5E3BDDBCB83F3D84, PlayerPedId(), GetHashKey(invItem.name), invItem.metadata.ammo or 0, false)
+                    
+                    -- Request weapon asset 
+                    Citizen.InvokeNative(0x72D4CB5DB927009C, GetHashKey(invItem.name), 1, true)
+                    
+                    -- Wait for the model/asset to load
+                    while not Citizen.InvokeNative(0xFF07CF465F48B830, GetHashKey(invItem.name)) do
+                        Wait(50)
+                    end
+                    
+                    -- If you have components or attachments to apply:
+                    if invItem.metadata.components then
+                        -- TriggerEvent('ricx_guns:addc', invItem.name, GetHashKey(invItem.name), invItem.metadata)
+                    end
+                end
+            end
+        end
+        
+        ::continue::
+    end
 end)
