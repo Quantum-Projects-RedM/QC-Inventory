@@ -50,7 +50,7 @@ local function canOpenInventory()
 
     if IsPauseMenuActive() then return end
 
-    if invBusy or invOpen == nil or (currentWeapon and currentWeapon.timer ~= 0) then
+    if invBusy or invOpen == nil then
         return shared.info('cannot open inventory', '(is busy)')
     end
 
