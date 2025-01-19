@@ -435,7 +435,7 @@ end)
 local function conversionScript()
 	shared.ready = false
 
-	local file = 'setup/convert.lua'
+	local file = 'modules/bridge/rsg/setup.lua'
 	local import = LoadResourceFile(shared.resource, file)
 	local func = load(import, ('@@%s/%s'):format(shared.resource, file)) --[[@as function]]
 
@@ -450,7 +450,7 @@ RegisterCommand('convertinventory', function(source, args)
 	local convert = arg and conversionScript[arg]
 
 	if not convert then
-		return warn('Invalid conversion argument. Valid options: esx, esxproperty, qb, linden')
+		return warn('Invalid conversion argument. Valid options: rsg, linden')
 	end
 
 	CreateThread(convert)
