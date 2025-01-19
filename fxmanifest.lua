@@ -5,7 +5,7 @@ games { 'rdr3'}
 rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aware my resources *will* become incompatible once RedM ships.'
 name 'QC-Inventory'
 author 'Quantum-Projects-RedM'
-version '2.0.2'
+version '2.0.0'
 repository 'https://github.com/Quantum-Projects-RedM/QC-Inventory'
 description 'Slot-based inventory with item metadata support'
 
@@ -45,6 +45,8 @@ files {
     'web/images/*.png',
     'modules/**/shared.lua',
     'modules/**/client.lua',
-    'modules/bridge/**/client.lua',
+    'modules/bridge/rsg/client.lua',
+    'modules/bridge/rsg/server.lua',
+    'modules/bridge/rsg/setup.lua',
     'data/*.lua',
 }
