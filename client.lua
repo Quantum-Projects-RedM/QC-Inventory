@@ -2078,7 +2078,7 @@ Citizen.CreateThread(function()
             if invItem.slot and invItem.slot <= 5 and string.match(invItem.name, "WEAPON") then
                 local key = GetHashKey(invItem.name)
 
-                -- If not already in the hotbar
+                -- If not already in the hotbars
                 if not Inhotbar[key] then
                     -- Add to hotbar table
                     Inhotbar[key] = invItem
@@ -2090,7 +2090,7 @@ Citizen.CreateThread(function()
                         Wait(50)
                     end
 
-					Citizen.InvokeNative(0x5E3BDDBCB83F3D84, PlayerPedId(), GetHashKey(invItem.name), 0, 0, 1, 0, false, 0.5, 1.0, 752097756, 0, false, 0.0)
+					Citizen.InvokeNative(0x5E3BDDBCB83F3D84, PlayerPedId(), GetHashKey(invItem.name), invItem.metadata.ammo, 0, 1, 0, false, 0.5, 1.0, 752097756, 0, false, 0.0)
 				
                     -- If you have components/attachments to apply
                     if invItem.metadata.components then
