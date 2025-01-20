@@ -963,7 +963,7 @@ local function registerCommands()
 					end
 
 					if IsDisabledControlJustPressed(0, `INPUT_GAME_MENU_TAB_LEFT_SECONDARY`) then -- tab
-						if client.weaponWheel and not IsPauseMenuActive() then
+						if not client.weaponWheel and not IsPauseMenuActive() then
 
 							SendNUIMessage({ action = 'toggleHotbar' })
 						end
