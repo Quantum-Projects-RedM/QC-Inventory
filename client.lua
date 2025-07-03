@@ -540,6 +540,7 @@ local function useSlot(slot, noAnim)
 				
 				if IS_RDR3 then
 					if isABow then
+						clipSize = 25
 						--[[ 
 							Allow to use up to the maximum amount of ammunition possible when using a bow, instead
 							to use only the maximum possible in the clip, which in the arc is 1

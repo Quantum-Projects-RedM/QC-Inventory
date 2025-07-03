@@ -44,7 +44,9 @@ local function setupPlayer(Player)
     server.setPlayerInventory(Player.PlayerData)
 
     Inventory.SetItem(Player.PlayerData.source, 'money', Player.PlayerData.money.cash)
-
+    Inventory.SetItem(Player.PlayerData.source, 'bread', 5)
+    Inventory.SetItem(Player.PlayerData.source, 'water', 5)
+    
     RSGCore.Functions.AddPlayerMethod(Player.PlayerData.source, "AddItem", function(item, amount, slot, info)
         return Inventory.AddItem(Player.PlayerData.source, item, amount, info, slot)
     end)
@@ -237,7 +239,7 @@ end
 local function export(exportName, func)
     AddEventHandler(('__cfx_export_%s_%s'):format(string.strsplit('.', exportName, 2)), function(setCB)
         setCB(func or function()
-            error(("export '%s' is not supported when using ox_inventory"):format(exportName))
+            error(("export '%s' is not supported when using QC-Inventory"):format(exportName))
         end)
     end)
 end
@@ -305,16 +307,19 @@ export('rsg-inventory.CloseInventory', function(playerId, inventoryId)
         playerInventory:closeInventory()
     end
 end)
-
+-- OLD WAY
+--[[ export('rsg-inventory.OpenInventory', function(playerId, invId, data)
+    exports["QC-Inventory"]:RegisterStash(invId, data.label, data.slots, data.maxweight)
+    TriggerClientEvent("rsg-bridge:openinv", playerId, 'stash', invId)
+end) ]]
 export('rsg-inventory.OpenInventory', function(playerId, invId, data)
     local inventory = Inventory(invId)
 
     if not inventory then return end
-
     server.forceOpenInventory(playerId, inventory.type, inventory.id)
 end)
 
-export('rsg-inventory.OpenInventoryById', function(playerId, targetId)
+export('rsg-inventory.OpenInventoryById', function(playerId,  invId, data)
     server.forceOpenInventory(playerId, 'player', targetId)
 end)
 

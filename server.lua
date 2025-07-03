@@ -1,5 +1,5 @@
 if not lib then return end
-
+local RSGCore = exports['rsg-core']:GetCoreObject()
 if GetConvar('inventory:versioncheck', 'true') == 'true' then
 	lib.versionCheck('Quantum-Projects-RedM/QC-Inventory')
 end
@@ -282,6 +282,27 @@ RegisterNetEvent('ox_inventory:usedItemInternal', function(slot)
     TriggerEvent('ox_inventory:usedItem', inventory.id, item.name, item.slot, next(item.metadata) and item.metadata)
 
     inventory.usingItem = nil
+end)
+
+RegisterNetEvent('rsg-horses:server:openhorseinventory')
+AddEventHandler('rsg-horses:server:openhorseinventory', function()
+    local src = source
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return end
+
+    -- Define stash details
+    local stashName = 'horse_stash_' .. src 
+    local label = 'Horse Trunk Storage' 
+    local maxWeight = 20000 
+    local maxSlots = 10
+
+    -- Register the stash with ox_inventory
+    exports.ox_inventory:RegisterStash(stashName, label, maxSlots, maxWeight)
+
+    print("Opening stash for player: " .. src .. ", Stash Name: " .. stashName)
+
+    -- Open the stash for the player
+    TriggerClientEvent('ox_inventory:openInventory', src, 'stash', stashName)
 end)
 
 ---@param source number

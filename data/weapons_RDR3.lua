@@ -45,7 +45,7 @@ return {
         },
         -- PISTOL
         ['WEAPON_PISTOL_VOLCANIC'] = {
-            label = 'Pistola Volcanic',
+            label = 'Volcanic Pistol',
             weight = 1300,
             durability = 0.03,
             ammoname = 'ammo_pistol',
@@ -191,13 +191,13 @@ return {
 
         -- MELEE 
         ['WEAPON_BOW'] = {
-            label = 'Bow',
+            label = 'Regular Bow',
             weight = 1000,
             durability = 0.03,
             ammoname = 'ammo_arrow',
         }, 
         ['WEAPON_BOW_IMPROVED'] = {
-            label = 'Reinforced hunting bow',
+            label = 'Improved Bow',
             weight = 1400,
             durability = 0.03,
             ammoname = 'ammo_arrow',
@@ -213,7 +213,7 @@ return {
             durability = 0.03,
         },
         ['WEAPON_MELEE_KNIFE'] = {
-            label = 'Knife',
+            label = 'Regular Knife',
             weight = 300,
             durability = 0.03,
         },     
@@ -366,7 +366,7 @@ return {
 			throwable = true,
         }, 
         ['WEAPON_THROWN_TOMAHAWK'] = {
-            label = 'Tomahawk (Throwable)',
+            label = 'Tomahawk',
             weight = 300,
             durability = 0.03,
 			throwable = true,
@@ -378,7 +378,7 @@ return {
 			throwable = true,
         }, 
         ['WEAPON_THROWN_BOLAS'] = {
-            label = 'Bolas (Throwable)',
+            label = 'Throwable Bolas',
             weight = 300,
             durability = 0.03,
 			throwable = true,
@@ -409,7 +409,7 @@ return {
 			throwable = true,
         },       
         ['WEAPON_KIT_BINOCULARS_IMPROVED'] = {
-            label = 'Improved binoculars',
+            label = 'Improved Binoculars',
             weight = 300,
             durability = 0.03
         },
@@ -420,7 +420,7 @@ return {
             durability = 0.03,
         },    
         ['WEAPON_FISHINGROD'] = {
-            label = 'Fishingrod',
+            label = 'Fishing Rod',
             weight = 300,
             durability = 0.03,
         },    
@@ -465,11 +465,11 @@ return {
         },    
 
         ['ammo_arrow'] = {
-            label = 'Arrows',
+            label = 'Arrow',
             weight = 3,
         },
         ['ammo_arrow_fire'] = {
-            label = 'Flaming Arrows',
+            label = 'Fire Ammo',
             weight = 3,
         },
 
