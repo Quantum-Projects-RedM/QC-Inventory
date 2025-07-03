@@ -1577,26 +1577,30 @@ RegisterNetEvent('ox_inventory:setPlayerInventory', function(currentDrops, inven
 						else currentWeapon.timer = GetGameTimer() + 400 end
 					end
 				elseif currentWeapon.throwable then
-					if not invBusy and IsControlPressed(0, 24) then
+					if not invBusy and IsControlPressed(0, 0x07CE1E61) then
 						invBusy = 1
 
 						CreateThread(function()
 							local weapon = currentWeapon
 
-							while currentWeapon and (not IsPedWeaponReadyToShoot(cache.ped) or IsDisabledControlPressed(0, 24)) and GetSelectedPedWeapon(playerPed) == weapon.hash do
-								Wait(0)
-							end
+                            while currentWeapon and (not IsPedWeaponReadyToShoot(cache.ped) or IsDisabledControlPressed(0, 0x07CE1E61)) and GetSelectedPedWeapon(playerPed) == weapon.hash do
+                                Wait(0)
+                            end
 
-							TriggerServerEvent('ox_inventory:updateWeapon', 'throw', nil, weapon.slot)
+                            if GetSelectedPedWeapon(playerPed) == weapon.hash then Wait(700) end
 
-							plyState.invBusy = false
-							currentWeapon = nil
+                            while IsPedPlantingBomb(playerPed) do Wait(0) end
 
-							RemoveWeaponFromPed(playerPed, weapon.hash)
-							TriggerEvent('ox_inventory:currentWeapon')
+                            TriggerServerEvent('ox_inventory:updateWeapon', 'throw', nil, weapon.slot)
+                            plyState:set('invBusy', false, true)
+
+                            currentWeapon = nil
+
+                            RemoveWeaponFromPed(playerPed, weapon.hash)
+                            TriggerEvent('ox_inventory:currentWeapon')
 						end)
 					end
-				elseif currentWeapon.melee and IsControlJustReleased(0, 24) and IsPedPerformingMeleeAction(playerPed) then
+				elseif currentWeapon.melee and IsControlJustReleased(0, 0x07CE1E61) and IsPedPerformingMeleeAction(playerPed) then
 					currentWeapon.melee += 1
 					currentWeapon.timer = GetGameTimer() + 200
 				end
