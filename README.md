@@ -40,7 +40,7 @@ A complete inventory system for RedM, implementing items, weapons, shops, and mo
     start ox_lib
     start rsg-core # the name of your framework (i.e. rsg-core, vorp-core)
     start ox_target
-    start QC-Inventory
+    start ox_inventory
 ```
 - please make sure to use the Installation folder for the inventory.cfg
 - add `exec exec inventory.cfg`

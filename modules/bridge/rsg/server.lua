@@ -239,7 +239,7 @@ end
 local function export(exportName, func)
     AddEventHandler(('__cfx_export_%s_%s'):format(string.strsplit('.', exportName, 2)), function(setCB)
         setCB(func or function()
-            error(("export '%s' is not supported when using QC-Inventory"):format(exportName))
+            error(("export '%s' is not supported when using ox_inventory"):format(exportName))
         end)
     end)
 end
@@ -309,7 +309,7 @@ export('rsg-inventory.CloseInventory', function(playerId, inventoryId)
 end)
 -- OLD WAY
 --[[ export('rsg-inventory.OpenInventory', function(playerId, invId, data)
-    exports["QC-Inventory"]:RegisterStash(invId, data.label, data.slots, data.maxweight)
+    exports["ox_inventory"]:RegisterStash(invId, data.label, data.slots, data.maxweight)
     TriggerClientEvent("rsg-bridge:openinv", playerId, 'stash', invId)
 end) ]]
 export('rsg-inventory.OpenInventory', function(playerId, invId, data)

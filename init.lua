@@ -86,7 +86,7 @@ else
         weaponanims = GetConvarInt('inventory:weaponanims', 1) == 1,
         itemnotify = GetConvarInt('inventory:itemnotify', 1) == 1,
         weaponnotify = GetConvarInt('inventory:weaponnotify', 1) == 1,
-        imagepath = GetConvar('inventory:imagepath', 'nui://QC-Inventory/web/images'),
+        imagepath = GetConvar('inventory:imagepath', 'nui://ox_inventory/web/images'),
         dropprops = GetConvarInt('inventory:dropprops', 1) == 1,
         dropmodel = joaat(GetConvar('inventory:dropmodel', 'p_bag01x')),
         weaponmismatch = GetConvarInt('inventory:weaponmismatch', 1) == 1,
@@ -190,7 +190,7 @@ end
 -- No we're not going to support qtarget any longer.
 if shared.target and GetResourceState('ox_target') ~= 'started' then
     shared.target = false
-    warn('ox_target is not loaded - it should start before QC-Inventory')
+    warn('ox_target is not loaded - it should start before ox_inventory')
 end
 
 if lib.context == 'server' then

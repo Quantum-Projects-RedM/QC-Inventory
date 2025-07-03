@@ -1,7 +1,7 @@
 if not lib then return end
 local RSGCore = exports['rsg-core']:GetCoreObject()
 if GetConvar('inventory:versioncheck', 'true') == 'true' then
-	lib.versionCheck('Quantum-Projects-RedM/QC-Inventory')
+	lib.versionCheck('Quantum-Projects-RedM/ox_inventory')
 end
 
 require 'modules.bridge.server'
