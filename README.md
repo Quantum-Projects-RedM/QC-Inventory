@@ -25,12 +25,12 @@ This version includes:
 
 ## 🐛 Troubleshooting
 > [!CAUTION]
-> If you encounter issues with item synchronization, verify that ox_target is also running before ox_inventory in your server.cfg.
+> If you encounter issues with item synchronization, verify that RSGCore is also running before ox_inventory in your server.cfg.
 
 ### Common Issues:
 - **Items not loading**: Check RSGCore shared items configuration
 - **Money not displaying**: Ensure money items are properly configured in RSGCore / enabled
-- **Cant Interact with drops**: Verify ox_target is started before the inventory / ox lib
+- **Cant Interact with drops**: Verify RSGCore is started before the inventory / ox lib
 
 ## 💬 Support & Community
 > [!IMPORTANT]
