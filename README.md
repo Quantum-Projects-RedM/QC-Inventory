@@ -1,6 +1,7 @@
 ## ❗IMPORTANT
 > [!IMPORTANT]
 > This is a specialized version of ox_inventory tailored specifically for RSG Framework and RedM. It maintains full functionality while providing enhanced integration with RedM enviroment.
+
 > [!NOTE]
 > The system automatically detects RSGCore items and configurations. Manual item configuration can still be done through the standard ox_inventory data/config files while maintaining RSGCore compatibility.
 
