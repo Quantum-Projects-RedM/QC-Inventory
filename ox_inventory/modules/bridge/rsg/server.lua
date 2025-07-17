@@ -318,10 +318,10 @@ export('rsg-inventory.CloseInventory', function(playerId, inventoryId)
 end)
 
 export('rsg-inventory.OpenInventory', function(playerId, invId, data)
-    local inventory = Inventory(invId)
-
-    if not inventory then return end
-    server.forceOpenInventory(playerId, inventory.type, inventory.id)
+    if data and data.maxweight and data.slots then
+        exports.ox_inventory:RegisterStash(invId, data.label or invId, data.slots, data.maxweight)
+    end
+    return exports.ox_inventory:forceOpenInventory(playerId, 'stash', invId)
 end)
 
 export('rsg-inventory.OpenInventoryById', function(playerId, targetId)
