@@ -1,5 +1,5 @@
 if not lib then return end
-
+local RSGCore = exports['rsg-core']:GetCoreObject()
 local shopTypes = {}
 local shops = {}
 local createBlip = require 'modules.utils.client'.CreateBlip
@@ -10,7 +10,9 @@ for shopType, shopData in pairs(lib.load('data.shops') --[[@as table<string, OxS
 		groups = shopData.groups or shopData.jobs,
 		blip = shopData.blip,
 		label = shopData.label,
-        icon = shopData.icon
+        icon = shopData.icon,
+		keyprompt = shopData.promptKey,
+		id = shopData.id,
 	}
 
 	if shared.target then
@@ -31,11 +33,21 @@ end
 
 ---@param point CPoint
 local function nearbyShop(point)
-	---@diagnostic disable-next-line: param-type-mismatch
-	DrawMarker(0x07DCE236, point.coords.x, point.coords.y, point.coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.2, 0.15, 30, 150, 30, 222, false, false, 0, true, false, false, false)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    --DrawMarker(0x07DCE236, point.coords.x, point.coords.y, point.coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.2, 0.15, 30, 150, 30, 222, false, false, 0, true, false, false, false)
 
-	if point.isClosest and point.currentDistance < 1.2 and IsControlJustReleased(0, 0xCEFD9220) then
-		client.openInventory('shop', { id = point.invId, type = point.type })
+    if point.isClosest and point.currentDistance < 1.2 then
+		if point.promtActive then return end
+        if not point.promptActive then
+            point.promptActive = true
+            exports['rsg-core']:createPrompt('ox_shop_'..point.id, point.coords, RSGCore.Shared.Keybinds[point.promptKey], point.name,
+                {
+                    type = 'client',
+                    event = 'ox_inventory:openInventory', -- replace with your event
+                    args = { 'shop', { id = point.invId, type = point.type } }
+                }
+            )
+        end
 	end
 end
 
@@ -201,8 +213,12 @@ local function refreshShops()
 					inv = 'shop',
 					invId = i,
 					type = type,
+					name = shop.name, -- add this line
+					promptKey = shop.keyprompt, -- add this line
 					nearby = nearbyShop,
-					blip = blip and createBlip(blip, coords)
+					id = shop.id,
+					blip = blip and createBlip(blip, coords),
+					promptActive = false,
 				})
 			end
 		end

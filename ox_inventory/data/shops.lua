@@ -24,7 +24,8 @@
 return {
     General = {
         name = 'General Store',
-        promptKey = 0xF3830D8E, -- J key for interaction
+        id = '1',
+        promptKey = 'J', -- Check rsg-core/shared/keybinds.lua for the prompt key.
         blip = {
             id = 'blip_shop_store', 
             colour = "BLIP_MODIFIER_MP_COLOR_32", 
