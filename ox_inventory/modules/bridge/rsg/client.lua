@@ -63,7 +63,7 @@ end)
 local function export(exportName, func)
     AddEventHandler(('__cfx_export_%s_%s'):format(string.strsplit('.', exportName, 2)), function(setCB)
         setCB(func or function()
-            error(("export '%s' is not supported when using ox_inventory"):format(exportName))
+            error(("export '%s' is not supported when using OX-Inventory"):format(exportName))
         end)
     end)
 end

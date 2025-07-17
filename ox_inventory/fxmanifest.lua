@@ -3,10 +3,10 @@ use_experimental_fxv2_oal 'yes'
 lua54 'yes'
 games { 'rdr3'}
 rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aware my resources *will* become incompatible once RedM ships.'
-name 'QC-Inventory'
-author 'Quantum-Projects-RedM'
+name 'ox-inventory'
+author 'Quantum Projects and Community'
 version '2.0.2'
-repository 'https://github.com/Quantum-Projects-RedM/QC-Inventory'
+repository 'https://github.com/Quantum-Projects-RedM/QC-Inventory/tree/main'
 description 'Slot-based inventory with item metadata support'
 
 dependencies {

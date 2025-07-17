@@ -190,7 +190,7 @@ end
 -- No we're not going to support qtarget any longer.
 if shared.target and GetResourceState('ox_target') ~= 'started' then
     shared.target = false
-    warn('ox_target is not loaded - it should start before ox_inventory')
+    warn('ox_target is not loaded - it should start before OX-Inventory')
 end
 
 if lib.context == 'server' then

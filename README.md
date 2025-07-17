@@ -36,7 +36,6 @@ A complete inventory system for RedM, implementing items, weapons, shops, and mo
 - Resource start order
 -- It's important for your resources to start in a logical order to prevent errors from missing dependencies.
 ```
-    start oxmysql   # this should be one of the first resources
     start ox_lib
     start rsg-core # the name of your framework (i.e. rsg-core, vorp-core)
     start ox_target

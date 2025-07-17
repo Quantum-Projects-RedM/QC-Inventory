@@ -44,9 +44,10 @@ local function setupPlayer(Player)
     server.setPlayerInventory(Player.PlayerData)
 
     Inventory.SetItem(Player.PlayerData.source, 'money', Player.PlayerData.money.cash)
+    Inventory.SetItem(Player.PlayerData.source, 'bloodmoney', Player.PlayerData.money.bloodmoney)
     Inventory.SetItem(Player.PlayerData.source, 'bread', 5)
     Inventory.SetItem(Player.PlayerData.source, 'water', 5)
-    
+
     RSGCore.Functions.AddPlayerMethod(Player.PlayerData.source, "AddItem", function(item, amount, slot, info)
         return Inventory.AddItem(Player.PlayerData.source, item, amount, info, slot)
     end)
@@ -104,7 +105,7 @@ function server.UseItem(source, itemName, data)
 end
 
 AddEventHandler('RSGCore:Server:OnMoneyChange', function(src, account, amount, changeType)
-    if account ~= "cash" then return end
+    if account == "cash" then 
 
     local item = Inventory.GetItem(src, 'money', nil, false)
 
@@ -113,6 +114,18 @@ AddEventHandler('RSGCore:Server:OnMoneyChange', function(src, account, amount, c
     Inventory.SetItem(src, 'money',
         changeType == "set" and amount or changeType == "remove" and item.count - amount or
         changeType == "add" and item.count + amount)
+
+    elseif  account == "bloodmoney" then 
+
+    local item = Inventory.GetItem(src, 'bloodmoney', nil, false)
+
+    if not item then return end
+
+    Inventory.SetItem(src, 'bloodmoney',
+    changeType == "set" and amount or changeType == "remove" and item.count - amount or
+    changeType == "add" and item.count + amount)
+    
+    return end
 end)
 
 ---@diagnostic disable-next-line: duplicate-set-field
@@ -143,6 +156,10 @@ function server.syncInventory(inv)
 
         if accounts.money and accounts.money ~= player.Functions.GetMoney('cash') then
             player.Functions.SetMoney('cash', accounts.money, "Sync money with inventory")
+        end
+
+        if accounts.bloodmoney and accounts.bloodmoney ~= player.Functions.GetMoney('bloodmoney') then
+            player.Functions.SetMoney('bloodmoney', accounts.bloodmoney, "Sync bloodmoney with inventory")
         end
     end
 end
@@ -191,14 +208,6 @@ function server.convertInventory(playerId, items)
                         hasThis = true
                     end
                 end
-
-                if not hasThis then
-                    local amount = player.Functions.GetMoney(name == 'money' and 'cash' or name)
-
-                    if amount then
-                        items[#items + 1] = { name = name, amount = amount }
-                    end
-                end
             end
         end
 
@@ -217,7 +226,7 @@ function server.convertInventory(playerId, items)
                     slot = slot,
                     count = count,
                     description =
-                        item.description,
+                    item.description,
                     metadata = metadata,
                     stack = item.stack,
                     close = item.close
@@ -307,11 +316,7 @@ export('rsg-inventory.CloseInventory', function(playerId, inventoryId)
         playerInventory:closeInventory()
     end
 end)
--- OLD WAY
---[[ export('rsg-inventory.OpenInventory', function(playerId, invId, data)
-    exports["ox_inventory"]:RegisterStash(invId, data.label, data.slots, data.maxweight)
-    TriggerClientEvent("rsg-bridge:openinv", playerId, 'stash', invId)
-end) ]]
+
 export('rsg-inventory.OpenInventory', function(playerId, invId, data)
     local inventory = Inventory(invId)
 
@@ -319,7 +324,7 @@ export('rsg-inventory.OpenInventory', function(playerId, invId, data)
     server.forceOpenInventory(playerId, inventory.type, inventory.id)
 end)
 
-export('rsg-inventory.OpenInventoryById', function(playerId,  invId, data)
+export('rsg-inventory.OpenInventoryById', function(playerId, targetId)
     server.forceOpenInventory(playerId, 'player', targetId)
 end)
 

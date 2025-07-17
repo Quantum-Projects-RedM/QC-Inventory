@@ -46,6 +46,8 @@ function Weapon.Equip(item, data, noWeaponAnim)
 	end
 	if IS_RDR3 then
 		item.melee = IsWeaponAGun(data.hash) == 0
+		-- print(data.hash, tonumber(item.count))
+		-- print(data.throwable)
 	end
 
 	item.timer = 0
@@ -55,14 +57,16 @@ function Weapon.Equip(item, data, noWeaponAnim)
 	if IS_GTAV then
 		GiveWeaponToPed(playerPed, data.hash, 0, false, true)
 	elseif IS_RDR3 then
+		
+		
 
 		if not HasPedGotWeapon(playerPed, data.hash, 0, false) then
 
 			local currentWeaponAmmo = GetAmmoInPedWeapon(playerPed, data.hash)
 
 			-- RemoveAmmoFromPed
-			N_0xf4823c813cb8277d(playerPed, data.hash, currentWeaponAmmo, `REMOVE_REASON_DEBUG`)
-
+			-- N_0xf4823c813cb8277d(playerPed, data.hash, currentWeaponAmmo, `REMOVE_REASON_DEBUG`)
+			
 			--[[ GiveWeaponToPed ]]
 			if data.throwable then
 				Citizen.InvokeNative(0xB282DC6EBD803C75, playerPed, data.hash, tonumber(item.count), true, 0) -- GIVE_DELAYED_WEAPON_TO_PED
@@ -75,13 +79,14 @@ function Weapon.Equip(item, data, noWeaponAnim)
 			local components in item.metadata
 
 			if components then
-				assert(components, 'Cade os components?')
+				assert(components, 'Is there components?')
 			
 				for i = 1, #components do
 					ApplyWeaponComponent(playerPed, data.hash, components[i])
 				end
 			end
 		end
+		
 	end
 
 	if item.metadata.tint then SetPedWeaponTintIndex(playerPed, data.hash, item.metadata.tint) end
@@ -164,7 +169,7 @@ function Weapon.Equip(item, data, noWeaponAnim)
 		SetPedInfiniteAmmo(playerPed, true, data.hash)
 	end
 
-	TriggerEvent('ox_inventory:currentWeapon', item)
+	TriggerEvent('ox_inventory:currentWeapon', item, 'equipped')
 
 	if client.weaponnotify then
 		Utils.ItemNotify({ item, 'ui_equipped' })
@@ -172,44 +177,48 @@ function Weapon.Equip(item, data, noWeaponAnim)
 
 	-- IsWeaponAGun
 	if IsWeaponAGun(data.hash) ~= 0 then
-		Citizen.CreateThreadNow(function()
-			while GetCurrentPedWeaponEntityIndex(playerPed, 0) == 0 do
-				Wait(0)
-			end
-
-			if not item?.slot == data.slot then
-				--[[ Garantir que ainda seja a mesma arma. ]]
-				return
-			end
-
-			local weaponEntityId = GetCurrentPedWeaponEntityIndex(playerPed, 0)
-
-			local degradation, soot, dirt, damage in item.metadata
-		
-			assert(degradation, 'Cade o degradation?')
-
-			-- SetWeaponDegradation
-			Citizen.InvokeNative(0xA7A57E89E965D839, weaponEntityId, degradation + 0.0001)
-
-			assert(soot, 'Cade o soot?')
-
-			-- SetWeaponSoot
-			Citizen.InvokeNative(0xA9EF4AD10BDDDB57, weaponEntityId, soot + 0.0001, false)
-
-			assert(dirt, 'Cade o dirt?')
-
-			-- SetWeaponDirt
-			Citizen.InvokeNative(0x812CE61DEBCAB948, weaponEntityId, dirt + 0.0001, false)
-
-			assert(damage, 'Cade o damage?')
-
-			-- SetWeaponDamage
-			Citizen.InvokeNative(0xE22060121602493B, weaponEntityId, damage + 0.0001, false)
-
-			--[[ Os estados de degradação foram aplicados, notificar os outros scripts... ]]
-			TriggerEvent('ox_inventory:equippedWeaponDegradationIsReady', item.slot)
-		end)
-	end
+        Citizen.CreateThreadNow(function()
+            while GetCurrentPedWeaponEntityIndex(playerPed, 0) == 0 do
+                Wait(0)
+            end
+    
+            if not item.slot == data.slot then
+                --[[ Ensure that it is still the same weapon. ]]
+                return
+            end
+    
+            local weaponEntityId = GetCurrentPedWeaponEntityIndex(playerPed, 0)
+    
+            -- Use the durability value for degradation, and adjust as needed
+            local degradation = item.metadata.durability or 0
+            local soot = item.metadata.ammo or 0 -- Assuming that soot could be related to ammo
+            local dirt = 0 -- Here you can adjust as you think needed
+            local damage = 0 -- Ajust for damage, according to your logic
+    
+            assert(degradation, 'Whats the degration?')
+    
+            -- SetWeaponDegradation
+            Citizen.InvokeNative(0xA7A57E89E965D839, weaponEntityId, degradation + 0.0001)
+    
+            assert(soot, 'Is there soot?')
+    
+            -- SetWeaponSoot
+            Citizen.InvokeNative(0xA9EF4AD10BDDDB57, weaponEntityId, soot + 0.0001, false)
+    
+            assert(dirt, 'Is there dirt?')
+    
+            -- SetWeaponDirt
+            Citizen.InvokeNative(0x812CE61DEBCAB948, weaponEntityId, dirt + 0.0001, false)
+    
+            assert(damage, 'Is there damage?')
+    
+            -- SetWeaponDamage
+            -- Citizen.InvokeNative(0xE22060121602493B, weaponEntityId, damage + 0.0001, false)
+    
+            --[[ Degradation States were applied, notify the other scripts... ]]
+            TriggerEvent('ox_inventory:equippedWeaponDegradationIsReady', item.slot)
+        end)
+    end
 
 	return item, sleep
 end
@@ -247,7 +256,7 @@ function Weapon.Disarm(currentWeapon, noAnim, keepHolstered)
 			Utils.ItemNotify({ currentWeapon, 'ui_holstered' })
 		end
 
-		TriggerEvent('ox_inventory:currentWeapon')
+		TriggerEvent('ox_inventory:currentWeapon', nil, 'disarm')
 	end
 
 	if IS_RDR3 and currentWeapon then

@@ -37,7 +37,7 @@ local function createCraftingBench(id, data)
             if data.zones then
     			for i = 1, #data.zones do
     				local zone = data.zones[i]
-    				zone.name = ("craftingbench_%s:%s"):format(id, i)
+    				zone.name = ("%s:%s"):format(id, i)
     				zone.id = id
     				zone.index = i
     				zone.options = {
@@ -67,9 +67,9 @@ local function createCraftingBench(id, data)
 			---@param point CPoint
 			local function nearbyBench(point)
 				---@diagnostic disable-next-line: param-type-mismatch
-				DrawMarker(2, point.coords.x, point.coords.y, point.coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.2, 0.15, 150, 150, 30, 222, false, false, 0, true, false, false, false)
+				DrawMarker(0x07DCE236, point.coords.x, point.coords.y, point.coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.2, 0.15, 150, 150, 30, 222, false, false, 0, true, false, false, false)
 
-				if point.isClosest and point.currentDistance < 1.2 and IsControlJustReleased(0, 38) then
+				if point.isClosest and point.currentDistance < 1.2 and IsControlJustReleased(0, 0xCEFD9220) then
 					client.openInventory('crafting', { id = point.benchid, index = point.index })
 				end
 			end
