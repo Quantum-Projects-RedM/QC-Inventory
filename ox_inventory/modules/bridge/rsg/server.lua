@@ -328,8 +328,19 @@ export('rsg-inventory.OpenInventoryById', function(playerId, targetId)
     server.forceOpenInventory(playerId, 'player', targetId)
 end)
 
-export('rsg-inventory.CreateShop')
-export('rsg-inventory.OpenShop')
+export('rsg-inventory.CreateShop', function(shopData)
+        local oxShopData = {
+        name = shopData.label or shopData.name,
+        inventory = shopData.items,
+        locations = shopData.locations or {},
+        groups = shopData.groups,
+    }
+    exports.ox_inventory:RegisterShop(shopData.name, oxShopData)
+end)
+
+export('rsg-inventory.OpenShop', function(playerId, shopName)
+    exports.ox_inventory:openInventory(playerId, 'shop', shopName)
+end)
 
 export('rsg-inventory.AddItem', function(invId, itemName, amount, slot, metadata)
     return Inventory.AddItem(invId, itemName, amount, metadata, slot) and true

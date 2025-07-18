@@ -20,7 +20,7 @@ return {
                 name = 'WEAPON_REVOLVER_CATTLEMAN',
                 ingredients = {
                     iron_bar = 10,
-                    woodplank = 2
+                    wood = 2
                 },
                 duration = 5000,
                 count = 1,
