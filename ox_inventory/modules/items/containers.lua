@@ -1,4 +1,5 @@
 local containers = {}
+local containerConfig = require 'data.containers'
 
 ---@class ItemContainerProperties
 ---@field slots number
@@ -51,16 +52,8 @@ local function setContainerProperties(itemName, properties)
 	}
 end
 
-setContainerProperties('paperbag', {
-	slots = 5,
-	maxWeight = 1000,
-	blacklist = { 'testburger' }
-})
-
-setContainerProperties('pizzabox', {
-	slots = 5,
-	maxWeight = 1000,
-	whitelist = { 'pizza' }
-})
+for itemName, properties in pairs(containerConfig) do
+    setContainerProperties(itemName, properties)
+end
 
 return containers
