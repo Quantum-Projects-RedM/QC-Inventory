@@ -10,7 +10,7 @@
 > **Official Support**: For technical support, bug reports, and feature requests, contact **Quantum Projects**.
 
 - **Discord**: [Join our Discord server for community support](https://discord.gg/kJ8ZrGM8TS)
-- **Documentation**: Check our wiki for detailed guides 
+- **Documentation**: [Check our RSG wiki for detailed guides ](https://quantumprojects.mintlify.app/homepage)
 - **Updates**: Follow our releases for the latest improvements
 
 ## 🔗 RSGCore Integration
@@ -28,8 +28,8 @@ This version includes:
 
 ### Migration Steps:
 1. Stop your server
-2. Backup your database (DONT REALLY WORRY AS OX_INV HAS ITS OWN TABLE, BUT GOOD PRACTICE! )
-3. Remove rsg-inventory from server.cfg / stop it
+2. Backup your database (Dont really worry about it since **ox_inventory** creates its own table, **BUT** Its good practice! )
+3. Remove rsg-inventory from server.cfg
 4. Add ox_inventory to server.cfg
 5. Test thoroughly before going live
 
@@ -41,9 +41,9 @@ This version includes:
 - **Items not loading**: Check RSGCore shared items configuration
 - **Money not displaying**: Ensure money items are properly configured in RSGCore / enabled
 - **Cant Interact with drops**: Verify RSGCore is started before the inventory / ox lib
-- **UI Bugs**: Ensure in index.html the **JS/CSS** names are right / build it again
+- **UI Bugs**: Ensure in index.html the **JS/CSS** names are right / or just build it again
 
-**Developed and maintained by Quantum Projects Community**
+**Developed by [Overextended](https://github.com/overextended) Maintained by Quantum Projects Community for RedM**
 
 ## 🤝 Contributing
 We welcome contributions from the community! Please ensure:
