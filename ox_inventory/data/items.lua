@@ -1,29 +1,10 @@
 return {
-	["money"] = {
-		label = "Money",
-		prop = "p_moneystack03x",
-	},
-	["black_money"] = {
-		label = "Black Money",
-		prop = "p_moneystack01x",
-	},
-
-	["money_clip"] = {
-		label = "Money Clip",
-		prop = "p_moneystack03x",
-	},
-	["blood_money_clip"] = {
-		label = "Black Money Clip",
-		prop = "p_moneystack01x",
-	},
 
 	["bread"] = {
 		label = "Bread",
 		description = "General Store Item",
 		weight = 250, -- In Grams
 		stack = true,
-		decay = true,
-		degrade = 4320, -- Minutes
 		close = true, -- if should close inventory when used
 		allowArmed = true, -- should we let them use with weapons?
 		prop = "p_bread01x",
@@ -33,8 +14,6 @@ return {
 		description = "General Store Item",
 		weight = 250, -- In Grams
 		stack = true,
-		decay = true,
-		degrade = 4320, -- Minutes
 		close = true, -- if should close inventory when used
 		allowArmed = true, -- should we let them use with weapons?
 	},
@@ -242,8 +221,21 @@ return {
 		stack = true,
 		close = true,
 		description = "Standard currency used for everyday transactions",
+		prop = 'p_moneystack03x',
 		client = {
 			image = "dollar.png",
+		}
+	},
+
+	["blood_dollar"] = {
+		label = "Bloodstained Dollars",
+		weight = 1,
+		stack = true,
+		close = true,
+		description = "Currency tainted by violence and crime",
+		prop = "p_moneystack01x",
+		client = {
+			image = "blood_dollar.png",
 		}
 	},
 
@@ -8956,17 +8948,6 @@ return {
 		}
 	},
 
-	["blood_dollar"] = {
-		label = "Bloodstained Dollars",
-		weight = 1,
-		stack = true,
-		close = true,
-		description = "Currency tainted by violence and crime",
-		client = {
-			image = "blood_dollar.png",
-		}
-	},
-
 	["honey_bee_queen"] = {
 		label = "Honey Bee Queen",
 		weight = 100,
@@ -9494,4 +9475,5 @@ return {
 			image = "pelt_Bruwnbear.png",
 		}
 	},
+
 }

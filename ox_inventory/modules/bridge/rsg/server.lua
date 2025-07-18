@@ -43,11 +43,11 @@ local function setupPlayer(Player)
     Player.PlayerData.name = ('%s %s'):format(Player.PlayerData.charinfo.firstname, Player.PlayerData.charinfo.lastname)
     server.setPlayerInventory(Player.PlayerData)
 
-    Inventory.SetItem(Player.PlayerData.source, 'money', Player.PlayerData.money.cash)
-    Inventory.SetItem(Player.PlayerData.source, 'bloodmoney', Player.PlayerData.money.bloodmoney)
+    -- Only add starter items
     Inventory.SetItem(Player.PlayerData.source, 'bread', 5)
     Inventory.SetItem(Player.PlayerData.source, 'water', 5)
 
+    -- Rest of the player methods remain the same
     RSGCore.Functions.AddPlayerMethod(Player.PlayerData.source, "AddItem", function(item, amount, slot, info)
         return Inventory.AddItem(Player.PlayerData.source, item, amount, info, slot)
     end)
@@ -73,11 +73,11 @@ local function setupPlayer(Player)
     end)
 
     RSGCore.Functions.AddPlayerMethod(Player.PlayerData.source, "SetInventory", function()
-        -- ox_inventory's item structure is not compatible with rsg-inventory's one so we don't support it
         error(
             'Player.Functions.SetInventory is unsupported for ox_inventory. Try ClearInventory, then add the desired items.')
     end)
 end
+
 
 AddEventHandler('RSGCore:Server:PlayerLoaded', setupPlayer)
 
@@ -104,30 +104,6 @@ function server.UseItem(source, itemName, data)
     return cb and cb(source, data)
 end
 
-AddEventHandler('RSGCore:Server:OnMoneyChange', function(src, account, amount, changeType)
-    if account == "cash" then 
-
-    local item = Inventory.GetItem(src, 'money', nil, false)
-
-    if not item then return end
-
-    Inventory.SetItem(src, 'money',
-        changeType == "set" and amount or changeType == "remove" and item.count - amount or
-        changeType == "add" and item.count + amount)
-
-    elseif  account == "bloodmoney" then 
-
-    local item = Inventory.GetItem(src, 'bloodmoney', nil, false)
-
-    if not item then return end
-
-    Inventory.SetItem(src, 'bloodmoney',
-    changeType == "set" and amount or changeType == "remove" and item.count - amount or
-    changeType == "add" and item.count + amount)
-    
-    return end
-end)
-
 ---@diagnostic disable-next-line: duplicate-set-field
 function server.setPlayerData(player)
     local groups = {
@@ -146,24 +122,19 @@ function server.setPlayerData(player)
     }
 end
 
+-- Simplified syncInventory that works with RSG Core's money system
 ---@diagnostic disable-next-line: duplicate-set-field
 function server.syncInventory(inv)
-    local accounts = Inventory.GetAccountItemCounts(inv)
-
-    if accounts then
-        local player = server.GetPlayerFromId(inv.id)
-        player.Functions.SetPlayerData('items', inv.items)
-
-        if accounts.money and accounts.money ~= player.Functions.GetMoney('cash') then
-            player.Functions.SetMoney('cash', accounts.money, "Sync money with inventory")
-        end
-
-        if accounts.bloodmoney and accounts.bloodmoney ~= player.Functions.GetMoney('bloodmoney') then
-            player.Functions.SetMoney('bloodmoney', accounts.bloodmoney, "Sync bloodmoney with inventory")
-        end
+    local player = server.GetPlayerFromId(inv.id)
+    if not player then return end
+    
+    player.Functions.SetPlayerData('items', inv.items)
+    
+    -- Let RSG Core's SynchronizeMoneyItems handle the money synchronization
+    if RSGCore.Config.Money.EnableMoneyItems and SynchronizeMoneyItems then
+        player.PlayerData = SynchronizeMoneyItems(player.PlayerData)
     end
 end
-
 ---@diagnostic disable-next-line: duplicate-set-field
 function server.hasLicense(inv, license)
     local player = server.GetPlayerFromId(inv.id)

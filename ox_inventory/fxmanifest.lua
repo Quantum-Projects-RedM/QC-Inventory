@@ -5,7 +5,7 @@ games { 'rdr3'}
 rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aware my resources *will* become incompatible once RedM ships.'
 name 'ox-inventory'
 author 'Quantum Projects and Community'
-version '2.0.2'
+version '2.0.3'
 repository 'https://github.com/Quantum-Projects-RedM/QC-Inventory/tree/main'
 description 'Slot-based inventory with item metadata support'
 
