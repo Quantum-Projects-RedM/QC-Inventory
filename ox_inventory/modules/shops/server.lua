@@ -154,16 +154,67 @@ lib.callback.register('ox_inventory:openShop', function(source, data)
 end)
 
 local function canAffordItem(inv, currency, price)
-	local canAfford = price >= 0 and Inventory.GetItem(inv, currency, false, true) >= price
+    local itemCount = 0
+    
+    if currency == 'money' then
+        local dollars = Inventory.GetItem(inv, 'dollar', false, true) or 0
+        local cents = Inventory.GetItem(inv, 'cent', false, true) or 0
+        itemCount = dollars + (cents / 100) -- Convert cents to dollar equivalent
+    else
+        itemCount = Inventory.GetItem(inv, currency, false, true) or 0
+    end
+    
+    local canAfford = price >= 0 and itemCount >= price
 
-	return canAfford or {
-		type = 'error',
-		description = locale('cannot_afford', ('%s%s'):format((currency == 'money' and locale('$') or math.groupdigits(price)), (currency == 'money' and math.groupdigits(price) or ' '..Items(currency).label)))
-	}
+    return canAfford or {
+        type = 'error',
+        description = locale('cannot_afford', ('%s%s'):format((currency == 'money' and locale('$') or math.groupdigits(price)), (currency == 'money' and math.groupdigits(price) or ' '..Items(currency).label)))
+    }
 end
-
 local function removeCurrency(inv, currency, price)
-	Inventory.RemoveItem(inv, currency, price)
+    if currency == 'money' then
+        -- Handle RSG Core money system
+        local totalCents = math.floor(price * 100) -- Convert price to cents
+        local dollars = Inventory.GetItem(inv, 'dollar', false, true) or 0
+        local cents = Inventory.GetItem(inv, 'cent', false, true) or 0
+        local totalPlayerCents = (dollars * 100) + cents
+        
+        if totalPlayerCents >= totalCents then
+            -- Calculate how many dollars and cents to remove
+            local dollarsToRemove = math.floor(totalCents / 100)
+            local centsToRemove = totalCents % 100
+            
+            -- Remove dollars first
+            if dollarsToRemove > 0 then
+                Inventory.RemoveItem(inv, 'dollar', dollarsToRemove)
+            end
+            
+            -- Handle cents
+            if centsToRemove > 0 then
+                if cents >= centsToRemove then
+                    -- Player has enough cents
+                    Inventory.RemoveItem(inv, 'cent', centsToRemove)
+                else
+                    -- Need to break a dollar
+                    if dollars > dollarsToRemove then
+                        Inventory.RemoveItem(inv, 'dollar', 1)
+                        local changeInCents = 100 - centsToRemove
+                        if cents > 0 then
+                            Inventory.RemoveItem(inv, 'cent', cents)
+                        end
+                        Inventory.AddItem(inv, 'cent', changeInCents + cents)
+                    else
+                        -- Remove all remaining cents
+                        if cents > 0 then
+                            Inventory.RemoveItem(inv, 'cent', cents)
+                        end
+                    end
+                end
+            end
+        end
+    else
+        Inventory.RemoveItem(inv, currency, price)
+    end
 end
 
 local TriggerEventHooks = require 'modules.hooks.server'
