@@ -3,29 +3,6 @@ local Items = require 'modules.items.server'
 
 local RSGCore
 
-AddEventHandler('RSGCore:Server:OnPlayerUnload', server.playerDropped)
-
-AddEventHandler('RSGCore:Server:OnJobUpdate', function(source, job)
-    local inventory = Inventory(source)
-    if not inventory then return end
-    inventory.player.groups[inventory.player.job] = nil
-    inventory.player.job = job.name
-    inventory.player.groups[job.name] = job.grade.level
-end)
-
-AddEventHandler('RSGCore:Server:OnGangUpdate', function(source, gang)
-    local inventory = Inventory(source)
-    if not inventory then return end
-    inventory.player.groups[inventory.player.gang] = nil
-    inventory.player.gang = gang.name
-    inventory.player.groups[gang.name] = gang.grade.level
-end)
-
-AddEventHandler('onResourceStart', function(resource)
-    if resource ~= 'rsg-weapons' or resource ~= 'rsg-shops' then return end
-    StopResource(resource)
-end)
-
 ---@param item SlotWithItem?
 ---@return SlotWithItem?
 local function setItemCompatibilityProps(item)
@@ -37,15 +14,66 @@ local function setItemCompatibilityProps(item)
     return item
 end
 
+local function calculateTotal(dollars, cents)
+    local totalCents = (dollars * 100) + cents
+    return math.floor(totalCents) / 100
+end
+
+-- Helper function to get money parts (dollars and cents)
+local function getParts(number)
+    local totalCents = math.floor((number * 100) + 0.5) -- Round to nearest cent
+    local dollars = math.floor(totalCents / 100)
+    local cents = totalCents % 100
+    return dollars, cents
+end
+
+local function syncMoneyToRSGCore(source)
+    local player = server.GetPlayerFromId(source)
+    if not player then return end
+
+    local dollarCount = Inventory.GetItemCount(source, 'dollar') or 0
+    local centCount = Inventory.GetItemCount(source, 'cent') or 0
+    local bloodDollarCount = Inventory.GetItemCount(source, 'blood_dollar') or 0
+    local bloodCentCount = Inventory.GetItemCount(source, 'blood_cent') or 0
+
+    local totalCash = calculateTotal(dollarCount, centCount)
+    local totalBloodMoney = calculateTotal(bloodDollarCount, bloodCentCount)
+
+    -- Update RSG Core money without triggering the money change event
+    player.PlayerData.money.cash = totalCash
+    player.PlayerData.money.bloodmoney = totalBloodMoney
+    
+    -- Trigger HUD update
+    TriggerClientEvent('hud:client:OnMoneyChange', source, 'cash', totalCash, false)
+    TriggerClientEvent('hud:client:OnMoneyChange', source, 'bloodmoney', totalBloodMoney, false)
+end
+
 local function setupPlayer(Player)
     Player.PlayerData.inventory = Player.PlayerData.items
     Player.PlayerData.identifier = Player.PlayerData.citizenid
     Player.PlayerData.name = ('%s %s'):format(Player.PlayerData.charinfo.firstname, Player.PlayerData.charinfo.lastname)
     server.setPlayerInventory(Player.PlayerData)
 
-    -- Only add starter items
+    -- Add starter items and money items
     Inventory.SetItem(Player.PlayerData.source, 'bread', 5)
     Inventory.SetItem(Player.PlayerData.source, 'water', 5)
+    
+    -- Convert money to items if money items are enabled
+    local cashDollars, cashCents = getParts(Player.PlayerData.money.cash)
+    local bloodDollars, bloodCents = getParts(Player.PlayerData.money.bloodmoney)
+    
+    if cashDollars > 0 then
+        Inventory.SetItem(Player.PlayerData.source, 'dollar', cashDollars)
+    end
+    if cashCents > 0 then
+        Inventory.SetItem(Player.PlayerData.source, 'cent', cashCents)
+    end
+    if bloodDollars > 0 then
+        Inventory.SetItem(Player.PlayerData.source, 'blood_dollar', bloodDollars)
+    end
+    if bloodCents > 0 then
+        Inventory.SetItem(Player.PlayerData.source, 'blood_cent', bloodCents)
+    end
 
     -- Rest of the player methods remain the same
     RSGCore.Functions.AddPlayerMethod(Player.PlayerData.source, "AddItem", function(item, amount, slot, info)
@@ -78,6 +106,92 @@ local function setupPlayer(Player)
     end)
 end
 
+AddEventHandler('RSGCore:Server:OnPlayerUnload', server.playerDropped)
+
+AddEventHandler('RSGCore:Server:OnJobUpdate', function(source, job)
+    local inventory = Inventory(source)
+    if not inventory then return end
+    inventory.player.groups[inventory.player.job] = nil
+    inventory.player.job = job.name
+    inventory.player.groups[job.name] = job.grade.level
+end)
+
+AddEventHandler('RSGCore:Server:OnGangUpdate', function(source, gang)
+    local inventory = Inventory(source)
+    if not inventory then return end
+    inventory.player.groups[inventory.player.gang] = nil
+    inventory.player.gang = gang.name
+    inventory.player.groups[gang.name] = gang.grade.level
+end)
+
+AddEventHandler('onResourceStart', function(resource)
+    if resource ~= 'rsg-weapons' or resource ~= 'rsg-shops' then return end
+    StopResource(resource)
+end)
+
+AddEventHandler('RSGCore:Server:OnMoneyChange', function(src, account, amount, changeType)
+    
+    if account == "cash" then 
+        local dollarItem = Inventory.GetItem(src, 'dollar', nil, false)
+        local centItem = Inventory.GetItem(src, 'cent', nil, false)
+        
+        local currentDollars = dollarItem and dollarItem.count or 0
+        local currentCents = centItem and centItem.count or 0
+        local currentTotal = calculateTotal(currentDollars, currentCents)
+        
+        local newAmount
+        if changeType == "set" then
+            newAmount = amount
+        elseif changeType == "remove" then
+            newAmount = currentTotal - amount
+        elseif changeType == "add" then
+            newAmount = currentTotal + amount
+        end
+        
+        if newAmount < 0 then newAmount = 0 end
+        
+        local newDollars, newCents = getParts(newAmount)
+        
+        Inventory.SetItem(src, 'dollar', newDollars)
+        Inventory.SetItem(src, 'cent', newCents)
+
+    elseif account == "bloodmoney" then 
+        local bloodDollarItem = Inventory.GetItem(src, 'blood_dollar', nil, false)
+        local bloodCentItem = Inventory.GetItem(src, 'blood_cent', nil, false)
+        
+        local currentBloodDollars = bloodDollarItem and bloodDollarItem.count or 0
+        local currentBloodCents = bloodCentItem and bloodCentItem.count or 0
+        local currentTotal = calculateTotal(currentBloodDollars, currentBloodCents)
+        
+        local newAmount
+        if changeType == "set" then
+            newAmount = amount
+        elseif changeType == "remove" then
+            newAmount = currentTotal - amount
+        elseif changeType == "add" then
+            newAmount = currentTotal + amount
+        end
+        
+        if newAmount < 0 then newAmount = 0 end
+        
+        local newBloodDollars, newBloodCents = getParts(newAmount)
+        
+        Inventory.SetItem(src, 'blood_dollar', newBloodDollars)
+        Inventory.SetItem(src, 'blood_cent', newBloodCents)
+    end
+end)
+
+AddEventHandler('ox_inventory:itemAdded', function(source, itemName, count)
+    if itemName == 'dollar' or itemName == 'cent' or itemName == 'blood_dollar' or itemName == 'blood_cent' then
+        syncMoneyToRSGCore(source)
+    end
+end)
+
+AddEventHandler('ox_inventory:itemRemoved', function(source, itemName, count)
+    if itemName == 'dollar' or itemName == 'cent' or itemName == 'blood_dollar' or itemName == 'blood_cent' then
+        syncMoneyToRSGCore(source)
+    end
+end)
 
 AddEventHandler('RSGCore:Server:PlayerLoaded', setupPlayer)
 
@@ -126,15 +240,27 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function server.syncInventory(inv)
     local player = server.GetPlayerFromId(inv.id)
-    if not player then return end
-    
-    player.Functions.SetPlayerData('items', inv.items)
-    
-    -- Let RSG Core's SynchronizeMoneyItems handle the money synchronization
-    if RSGCore.Config.Money.EnableMoneyItems and SynchronizeMoneyItems then
-        player.PlayerData = SynchronizeMoneyItems(player.PlayerData)
+    if player then
+        player.Functions.SetPlayerData('items', inv.items)
+        
+        local dollarCount = Inventory.GetItemCount(inv.id, 'dollar') or 0
+        local centCount = Inventory.GetItemCount(inv.id, 'cent') or 0
+        local bloodDollarCount = Inventory.GetItemCount(inv.id, 'blood_dollar') or 0
+        local bloodCentCount = Inventory.GetItemCount(inv.id, 'blood_cent') or 0
+
+        local totalCash = calculateTotal(dollarCount, centCount)
+        local totalBloodMoney = calculateTotal(bloodDollarCount, bloodCentCount)
+
+        if totalCash ~= player.Functions.GetMoney('cash') then
+            player.Functions.SetMoney('cash', totalCash, "Sync cash with inventory")
+        end
+
+        if totalBloodMoney ~= player.Functions.GetMoney('bloodmoney') then
+            player.Functions.SetMoney('bloodmoney', totalBloodMoney, "Sync bloodmoney with inventory")
+        end
     end
 end
+
 ---@diagnostic disable-next-line: duplicate-set-field
 function server.hasLicense(inv, license)
     local player = server.GetPlayerFromId(inv.id)
@@ -148,11 +274,18 @@ function server.buyLicense(inv, license)
 
     if player.PlayerData.metadata.licences[license.name] then
         return false, 'already_have'
-    elseif Inventory.GetItemCount(inv, 'money') < license.price then
+    end
+    
+    local totalMoney
+    local dollarCount = Inventory.GetItemCount(inv.id, 'dollar') or 0
+    local centCount = Inventory.GetItemCount(inv.id, 'cent') or 0
+    totalMoney = calculateTotal(dollarCount, centCount)
+    
+    if totalMoney < license.price then
         return false, 'can_not_afford'
     end
 
-    Inventory.RemoveItem(inv, 'money', license.price)
+    player.Functions.RemoveMoney('cash', license.price, "License purchase")
     player.PlayerData.metadata.licences[license.name] = true
     player.Functions.SetMetaData('licences', player.PlayerData.metadata.licences)
 
