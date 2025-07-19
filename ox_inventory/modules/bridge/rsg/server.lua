@@ -52,30 +52,8 @@ local function setupPlayer(Player)
     Player.PlayerData.inventory = Player.PlayerData.items
     Player.PlayerData.identifier = Player.PlayerData.citizenid
     Player.PlayerData.name = ('%s %s'):format(Player.PlayerData.charinfo.firstname, Player.PlayerData.charinfo.lastname)
-    server.setPlayerInventory(Player.PlayerData)
-
-    -- Add starter items and money items
-    Inventory.SetItem(Player.PlayerData.source, 'bread', 5)
-    Inventory.SetItem(Player.PlayerData.source, 'water', 5)
     
-    -- Convert money to items if money items are enabled
-    local cashDollars, cashCents = getParts(Player.PlayerData.money.cash)
-    local bloodDollars, bloodCents = getParts(Player.PlayerData.money.bloodmoney)
-    
-    if cashDollars > 0 then
-        Inventory.SetItem(Player.PlayerData.source, 'dollar', cashDollars)
-    end
-    if cashCents > 0 then
-        Inventory.SetItem(Player.PlayerData.source, 'cent', cashCents)
-    end
-    if bloodDollars > 0 then
-        Inventory.SetItem(Player.PlayerData.source, 'blood_dollar', bloodDollars)
-    end
-    if bloodCents > 0 then
-        Inventory.SetItem(Player.PlayerData.source, 'blood_cent', bloodCents)
-    end
-
-    -- Rest of the player methods remain the same
+    -- Add player methods FIRST before doing anything else
     RSGCore.Functions.AddPlayerMethod(Player.PlayerData.source, "AddItem", function(item, amount, slot, info)
         return Inventory.AddItem(Player.PlayerData.source, item, amount, info, slot)
     end)
@@ -104,6 +82,30 @@ local function setupPlayer(Player)
         error(
             'Player.Functions.SetInventory is unsupported for ox_inventory. Try ClearInventory, then add the desired items.')
     end)
+
+    -- NOW set up the inventory after methods are available
+    server.setPlayerInventory(Player.PlayerData)
+
+    -- Add starter items and money items
+    Inventory.SetItem(Player.PlayerData.source, 'bread', 5)
+    Inventory.SetItem(Player.PlayerData.source, 'water', 5)
+    
+    -- Convert money to items if money items are enabled
+    local cashDollars, cashCents = getParts(Player.PlayerData.money.cash)
+    local bloodDollars, bloodCents = getParts(Player.PlayerData.money.bloodmoney)
+    
+    if cashDollars > 0 then
+        Inventory.SetItem(Player.PlayerData.source, 'dollar', cashDollars)
+    end
+    if cashCents > 0 then
+        Inventory.SetItem(Player.PlayerData.source, 'cent', cashCents)
+    end
+    if bloodDollars > 0 then
+        Inventory.SetItem(Player.PlayerData.source, 'blood_dollar', bloodDollars)
+    end
+    if bloodCents > 0 then
+        Inventory.SetItem(Player.PlayerData.source, 'blood_cent', bloodCents)
+    end
 end
 
 AddEventHandler('RSGCore:Server:OnPlayerUnload', server.playerDropped)
@@ -128,8 +130,8 @@ AddEventHandler('onResourceStart', function(resource)
     if resource ~= 'rsg-weapons' or resource ~= 'rsg-shops' then return end
     StopResource(resource)
 end)
-
-AddEventHandler('RSGCore:Server:OnMoneyChange', function(src, account, amount, changeType)
+---- INSTEAD WE WILL LET RSG-CORE HANDLE THE INVENTORY MONEY FOR US
+--[[ AddEventHandler('RSGCore:Server:OnMoneyChange', function(src, account, amount, changeType)
     
     if account == "cash" then 
         local dollarItem = Inventory.GetItem(src, 'dollar', nil, false)
@@ -179,7 +181,7 @@ AddEventHandler('RSGCore:Server:OnMoneyChange', function(src, account, amount, c
         Inventory.SetItem(src, 'blood_dollar', newBloodDollars)
         Inventory.SetItem(src, 'blood_cent', newBloodCents)
     end
-end)
+end) ]]
 
 AddEventHandler('ox_inventory:itemAdded', function(source, itemName, count)
     if itemName == 'dollar' or itemName == 'cent' or itemName == 'blood_dollar' or itemName == 'blood_cent' then
@@ -240,24 +242,24 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function server.syncInventory(inv)
     local player = server.GetPlayerFromId(inv.id)
-    if player then
-        player.Functions.SetPlayerData('items', inv.items)
-        
-        local dollarCount = Inventory.GetItemCount(inv.id, 'dollar') or 0
-        local centCount = Inventory.GetItemCount(inv.id, 'cent') or 0
-        local bloodDollarCount = Inventory.GetItemCount(inv.id, 'blood_dollar') or 0
-        local bloodCentCount = Inventory.GetItemCount(inv.id, 'blood_cent') or 0
+    if not player or not player.Functions then return end -- Add safety check
+    
+    player.Functions.SetPlayerData('items', inv.items)
+    
+    local dollarCount = Inventory.GetItemCount(inv.id, 'dollar') or 0
+    local centCount = Inventory.GetItemCount(inv.id, 'cent') or 0
+    local bloodDollarCount = Inventory.GetItemCount(inv.id, 'blood_dollar') or 0
+    local bloodCentCount = Inventory.GetItemCount(inv.id, 'blood_cent') or 0
 
-        local totalCash = calculateTotal(dollarCount, centCount)
-        local totalBloodMoney = calculateTotal(bloodDollarCount, bloodCentCount)
+    local totalCash = calculateTotal(dollarCount, centCount)
+    local totalBloodMoney = calculateTotal(bloodDollarCount, bloodCentCount)
 
-        if totalCash ~= player.Functions.GetMoney('cash') then
-            player.Functions.SetMoney('cash', totalCash, "Sync cash with inventory")
-        end
+    if totalCash ~= player.Functions.GetMoney('cash') then
+        player.Functions.SetMoney('cash', totalCash, "Sync cash with inventory")
+    end
 
-        if totalBloodMoney ~= player.Functions.GetMoney('bloodmoney') then
-            player.Functions.SetMoney('bloodmoney', totalBloodMoney, "Sync bloodmoney with inventory")
-        end
+    if totalBloodMoney ~= player.Functions.GetMoney('bloodmoney') then
+        player.Functions.SetMoney('bloodmoney', totalBloodMoney, "Sync bloodmoney with inventory")
     end
 end
 
@@ -390,12 +392,20 @@ end)
 
 export('rsg-inventory.GetTotalWeight')
 
-export('rsg-inventory.GetItemByName', function(playerId, itemName)
-    return Inventory.GetSlotWithItem(playerId, itemName)
-end)
-
 export('rsg-inventory.GetItemsByName', function(playerId, itemName)
-    return Inventory.GetSlotsWithItem(playerId, itemName)
+    local items = Inventory.GetSlotsWithItem(playerId, itemName)
+    if not items then return {} end
+    
+    -- Convert to RSG format with compatibility props
+    local result = {}
+    for i, item in pairs(items) do
+        if item then
+            item.info = item.metadata
+            item.amount = item.count
+            result[i] = item
+        end
+    end
+    return result
 end)
 
 export('rsg-inventory.GetSlots')
@@ -433,22 +443,54 @@ export('rsg-inventory.OpenInventoryById', function(playerId, targetId)
 end)
 
 export('rsg-inventory.CreateShop', function(shopData)
-        local oxShopData = {
+    -- Convert RSG shop format to ox_inventory format
+    local oxShopData = {
         name = shopData.label or shopData.name,
-        inventory = shopData.items,
+        inventory = {},
         locations = shopData.locations or {},
         groups = shopData.groups,
     }
-    exports.ox_inventory:RegisterShop(shopData.name, oxShopData)
+    
+    -- Convert items format from RSG to ox_inventory
+    if shopData.items then
+        for i, item in pairs(shopData.items) do
+            oxShopData.inventory[i] = {
+                name = item.name,
+                price = item.price,
+                count = item.amount or item.count or 1,
+                currency = item.currency or 'money'
+            }
+        end
+    end
+    print(json.encode(oxShopData))
+    return exports.ox_inventory:RegisterShop(shopData.name, oxShopData)
 end)
 
 export('rsg-inventory.OpenShop', function(playerId, shopName)
-    exports.ox_inventory:openInventory(playerId, 'shop', shopName)
+    -- Print a helpful message about needing to convert to ox_inventory shops
+    print(('^3[ox_inventory] ^7Shop opening for "%s" needs to be reworked to use ox_inventory shop system.'):format(shopName))
+    print('^3[ox_inventory] ^7Please convert your RSG shops to ox_inventory format in data/shops.lua')
+    print('^3[ox_inventory] ^7See ox_inventory documentation for shop configuration examples.')
+    
+    -- Notify the player that the shop system needs updating
+    local Player = RSGCore.Functions.GetPlayer(playerId)
+    if Player then
+        TriggerClientEvent('ox_lib:notify', playerId, {
+            title = 'Shop System',
+            description = 'This shop needs to be converted to ox_inventory format. Please contact an administrator.',
+            type = 'inform',
+            duration = 5000
+        })
+    end
+    
+    return false
 end)
 
 export('rsg-inventory.AddItem', function(invId, itemName, amount, slot, metadata)
-    return Inventory.AddItem(invId, itemName, amount, metadata, slot) and true
+    local success = Inventory.AddItem(invId, itemName, amount, metadata, slot)
+    return success and true or false
 end)
+
 
 export('rsg-inventory.RemoveItem', function(invId, itemName, amount, slot)
     return Inventory.RemoveItem(invId, itemName, amount, nil, slot) and true
