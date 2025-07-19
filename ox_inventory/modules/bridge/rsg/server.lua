@@ -390,7 +390,10 @@ export('rsg-inventory.GetItemBySlot', function(playerId, slotId)
     return Inventory.GetSlot(playerId, slotId)
 end)
 
-export('rsg-inventory.GetTotalWeight')
+export('rsg-inventory.GetTotalWeight', function(playerId)
+    local inventory = exports.ox_inventory:GetInventory(playerId)
+    return inventory and inventory.weight or 0
+end)
 
 export('rsg-inventory.GetItemsByName', function(playerId, itemName)
     local items = Inventory.GetSlotsWithItem(playerId, itemName)
