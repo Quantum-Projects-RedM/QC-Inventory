@@ -37,8 +37,14 @@ local function getInventoryMoney(playerData)
     }
 
     for _, item in pairs(playerData.items or {}) do
+        if item and moneyMap[item.name] then
+            local amount = item.count or item.amount or 0
+            money[moneyMap[item.name]] = money[moneyMap[item.name]] + amount
+        end
+    end
 
     return money
+end
 
 local function removeItems(player, itemName, amountToRemove)
     
